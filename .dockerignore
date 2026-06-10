@@ -1,0 +1,30 @@
+# =============================================================
+# .dockerignore
+# Prevents large / sensitive files from being sent to the
+# Docker build context, which speeds up every build.
+# =============================================================
+
+# Dependencies — Docker installs these fresh inside the image
+**/node_modules
+
+# Vite / build output — the builder stage regenerates these
+**/dist
+**/.vite
+
+# Environment files — never bake secrets into images
+**/.env
+**/.env.*
+
+# SQLite WAL files — volatile; the volume handles persistence
+**/*.db-shm
+**/*.db-wal
+
+# Version control
+.git
+.gitignore
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+**/.idea
+**/.vscode

@@ -1,0 +1,65 @@
+# =============================================================
+# DOCKER COMPOSE — Student Task Manager
+# Services:  frontend (Nginx/React)  +  backend (Node/Express/SQLite)
+# Usage:     docker compose up --build
+# =============================================================
+
+services:
+
+  # ── Backend ──────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend                       # project root (contains backend/ folder)
+      dockerfile: backend.Dockerfile
+    container_name: student-task-backend
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+
+    # Named volume keeps SQLite data across container restarts
+    volumes:
+      - sqlite_data:/app/database
+
+    # Only expose to the internal Docker network; Nginx proxies /api
+    expose:
+      - "3001"
+
+    networks:
+      - app-network
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Frontend ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend                       # project root (contains frontend/ folder)
+      dockerfile: frontend.Dockerfile
+    container_name: student-task-frontend
+    restart: unless-stopped
+
+    ports:
+      - "3000:80"                      # http://localhost:3000  →  Nginx inside container
+
+    networks:
+      - app-network
+
+    depends_on:
+      backend:
+        condition: service_healthy     # wait for backend health check to pass
+
+# ── Volumes ───────────────────────────────────────────────────
+volumes:
+  sqlite_data:
+    name: student-task-sqlite          # named so it survives "docker compose down"
+
+# ── Network ───────────────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge
