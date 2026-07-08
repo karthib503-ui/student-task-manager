@@ -68,8 +68,8 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     ports:
       - "5044:5044"
-      - "50000:50000/tcp"
-      - "50000:50000/udp"
+      - "50001:50000/tcp"
+      - "50001:50000/udp"
     depends_on:
       - elasticsearch
     networks:
