@@ -19,6 +19,8 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Fix permissions for the binaries inside node_modules so Vite can execute smoothly
+RUN chmod -R +x ./node_modules/.bin
 
 # Vite outputs the production bundle into /app/dist
 RUN npm run build
