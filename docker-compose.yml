@@ -61,10 +61,9 @@ services:
       - app-network
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.11.1
+    build: ./logstash
     container_name: logstash
     volumes:
-      - ./logstash/config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     ports:
       - "5044:5044"
@@ -74,7 +73,6 @@ services:
       - elasticsearch
     networks:
       - app-network
-
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
     container_name: kibana
