@@ -1,0 +1,21 @@
+---
+- name: Deploy Student Task Manager Stack
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Shut down residual container configurations
+      community.docker.docker_compose_v2:
+        project_src: "."
+        state: absent
+        remove_orphans: true
+
+    - name: Build and pull updated application images
+      community.docker.docker_compose_v2:
+        project_src: "."
+        build: always
+
+    - name: Spin up application services in detached mode
+      community.docker.docker_compose_v2:
+        project_src: "."
+        state: present
