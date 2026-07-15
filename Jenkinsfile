@@ -13,14 +13,13 @@ pipeline {
                 echo '🚀 Activating Separate Semaphore Worker via API Webhook'
                 echo '========================================='
                 
-                // Triggers the playbook run over the network via Semaphore's REST API
-                // 1. Replace PASTE_YOUR_ACTUAL_TOKEN with the token string from Step 1
-                // 2. Ensure project/1/templates/1 matches your real IDs from Step 2
+                // We send a POST request to /tasks and specify the template ID in the JSON body
                 sh '''
                 curl -X POST \
-                  -H "Authorization: Bearer oducykhrp-2hthf1nhjk4kayzflebdz-a3wdqqfkqsw=" \
+                  -H "Authorization: Bearer rafx6chp3f3olgfvo-3dkxdypnhmzvusy-znu_bhtd4=" \
                   -H "Content-Type: application/json" \
-                  http://ansible-semaphore:3000/api/project/1/templates/1/execute
+                  -d '{"template_id": 1}' \
+                  http://ansible-semaphore:3000/api/project/1/tasks
                 '''
             }
         }
