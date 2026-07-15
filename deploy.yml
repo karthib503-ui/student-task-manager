@@ -5,17 +5,14 @@
 
   tasks:
     - name: Shut down residual container configurations
-      community.docker.docker_compose_v2:
-        project_src: "."
-        state: absent
-        remove_orphans: true
+      ansible.builtin.shell:
+        cmd: docker compose down --remove-orphans
+      ignore_errors: true
 
-    - name: Build and pull updated application images
-      community.docker.docker_compose_v2:
-        project_src: "."
-        build: always
+    - name: Build updated application images
+      ansible.builtin.shell:
+        cmd: docker compose build --no-cache
 
     - name: Spin up application services in detached mode
-      community.docker.docker_compose_v2:
-        project_src: "."
-        state: present
+      ansible.builtin.shell:
+        cmd: docker compose up -d
