@@ -4,15 +4,12 @@
   gather_facts: false
 
   tasks:
-    - name: Shut down residual container configurations
+    - name: Run Docker Compose Stack Lifecycle via Tool Container
       ansible.builtin.shell:
-        cmd: docker compose down --remove-orphans
-      ignore_errors: true
-
-    - name: Build updated application images
-      ansible.builtin.shell:
-        cmd: docker compose build --no-cache
-
-    - name: Spin up application services in detached mode
-      ansible.builtin.shell:
-        cmd: docker compose up -d
+        cmd: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD":"$PWD" \
+            -w "$PWD" \
+            docker:latest \
+            sh -c "docker compose down --remove-orphans && docker compose build --no-cache && docker compose up -d"
