@@ -2,66 +2,36 @@ pipeline {
     agent any
 
     options {
-        // Keeps the console clean and limits build history
         buildDiscarder(logRotator(numToKeepStr: '5'))
         timeout(time: 1, unit: 'HOURS')
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Trigger External Ansible Pipeline') {
             steps {
                 echo '========================================='
-                echo 'PHASE 1: Fetching Latest Code from Git'
+                echo '🚀 Activating Separate Semaphore Worker via API Webhook'
                 echo '========================================='
-                // Jenkins automatically handles checkout if configured, 
-                // but this explicitly confirms code availability
-                checkout scm
-            }
-        }
-
-        stage('Environment Staging') {
-            steps {
-                echo '========================================='
-                echo 'PHASE 2: Cleaning Residual Containers'
-                echo '========================================='
-                sh 'docker compose down --remove-orphans'
-            }
-        }
-
-        stage('Build Assets') {
-            steps {
-                echo '========================================='
-                echo 'PHASE 3: Compiling Frontend & Backend Layers'
-                echo '========================================='
-                sh 'docker compose build --no-cache'
-            }
-        }
-
-        stage('Production Deploy') {
-            steps {
-                echo '========================================='
-                echo 'PHASE 4: Launching Application Stack'
-                echo '========================================='
-                sh 'docker compose up -d'
-            }
-        }
-
-        stage('Health Verification') {
-            steps {
-                echo '========================================='
-                echo 'PHASE 5: Verifying Operational Telemetry'
-                echo '========================================='
-                sh 'docker ps'
+                
+                // Triggers the playbook run over the network via Semaphore's REST API
+                // 1. Replace PASTE_YOUR_ACTUAL_TOKEN with the token string from Step 1
+                // 2. Ensure project/1/templates/1 matches your real IDs from Step 2
+                sh '''
+                curl -X POST \
+                  -H "Authorization: Bearer oducykhrp-2hthf1nhjk4kayzflebdz-a3wdqqfkqsw=" \
+                  -H "Content-Type: application/json" \
+                  http://ansible-semaphore:3000/api/project/1/templates/1/execute
+                '''
             }
         }
     }
 
     post {
         success {
-            echo '🎉 CI/CD Pipeline Executed Successfully! App is Live.'
+            echo '🎉 Webhook delivered successfully! Tracking execution inside Semaphore GUI.'
         }
         failure {
-            echo '❌ Pipeline Failed. Checking operational logs...'
+            echo '❌ Pipeline connectivity failed. Verify internal network route or token authorization.'
         }
     }
 }
