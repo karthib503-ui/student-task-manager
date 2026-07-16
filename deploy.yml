@@ -4,9 +4,16 @@
   gather_facts: false
 
   tasks:
-    - name: Run Docker Compose Stack Lifecycle
+    - name: Ensure the external network mesh exists
+      ansible.builtin.shell:
+        cmd: docker network create semaphore_default 2>/dev/null || true
+
+    - name: Run Docker Compose Stack Lifecycle via Tool Container
       ansible.builtin.shell:
         cmd: |
-          docker compose --project-directory "{{ playbook_dir }}" down --remove-orphans
-          docker compose --project-directory "{{ playbook_dir }}" build --no-cache
-          docker compose --project-directory "{{ playbook_dir }}" up -d
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "{{ playbook_dir }}":"{{ playbook_dir }}" \
+            -w "{{ playbook_dir }}" \
+            docker:latest \
+            sh -c "docker compose down --remove-orphans && docker compose build --no-cache && docker compose up -d"

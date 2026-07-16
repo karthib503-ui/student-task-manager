@@ -8,13 +8,13 @@ services:
   # ── Backend ──────────────────────────────────────────────────
   backend:
     build:
-      context: ./backend                      # project root (contains backend/ folder)
-      dockerfile: backend.Dockerfile
+      context: .                          # CHANGED: target current directory context
+      dockerfile: backend/backend.Dockerfile # CHANGED: explicit path to Dockerfile
     container_name: student-task-backend
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      PORT: 3001
+      - NODE_ENV=production
+      - PORT=3001
     volumes:
       - sqlite_data:/app/database
     expose:
@@ -33,12 +33,12 @@ services:
   # ── Frontend ─────────────────────────────────────────────────
   frontend:
     build:
-      context: ./frontend                      # project root (contains frontend/ folder)
-      dockerfile: frontend.Dockerfile
+      context: .                          # CHANGED: target current directory context
+      dockerfile: frontend/frontend.Dockerfile # CHANGED: explicit path to Dockerfile
     container_name: student-task-frontend
     restart: unless-stopped
     ports:
-      - "3005:80"                      # CHANGED from 3000 to 3005 to prevent conflict with Grafana
+      - "3005:80"                      # Kept on 3005 to prevent conflict with Grafana
     networks:
       - app-network
     depends_on:
@@ -63,7 +63,6 @@ services:
   logstash:
     build: ./logstash/config
     container_name: logstash
-    # ... rest of the parameters stay exactly the same
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     ports:
@@ -74,6 +73,7 @@ services:
       - elasticsearch
     networks:
       - app-network
+
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
     container_name: kibana
@@ -122,4 +122,5 @@ volumes:
 # ── Network ───────────────────────────────────────────────────
 networks:
   app-network:
-    driver: bridge
+    name: semaphore_default            # CHANGED: Hooks directly into the active container mesh
+    external: true                     # CHANGED: Tells compose the network is pre-existing
