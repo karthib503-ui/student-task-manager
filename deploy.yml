@@ -6,13 +6,14 @@
   tasks:
     - name: Ensure the external network mesh exists
       ansible.builtin.shell:
-        cmd: docker network create semaphore_default 2>/dev/null || true
+        cmd: /usr/bin/docker network create semaphore_default 2>/dev/null || true
 
     - name: Run Docker Compose Stack Lifecycle
       ansible.builtin.shell:
         cmd: |
-          docker compose down --remove-orphans
-          docker compose build --no-cache
-          docker compose up -d
+          set -e
+          /usr/bin/docker compose down --remove-orphans
+          /usr/bin/docker compose build --no-cache
+          /usr/bin/docker compose up -d
       environment:
         COMPOSE_FILE: "{{ playbook_dir }}/docker-compose.yml"
