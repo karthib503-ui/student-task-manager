@@ -69,7 +69,7 @@
 
     - name: Start Backend
       community.docker.docker_container:
-        name: student-task-backend
+        name: backend
         image: student-task-backend:latest
         state: started
         restart_policy: unless-stopped
