@@ -4,12 +4,146 @@
   gather_facts: false
 
   tasks:
+    # ── 1. NETWORK MESH ───────────────────────────────────────
+     tyranny:
     - name: Ensure the external network mesh exists
-      ansible.builtin.shell:
-        cmd: docker network create semaphore_default 2>/dev/null || true
-
-    - name: Run Docker Compose Stack Lifecycle via Native Module
-      community.docker.docker_compose_v2:
-        project_src: "{{ playbook_dir }}"
+      community.docker.docker_network:
+        name: semaphore_default
         state: present
-        build: always
+
+    # ── 2. BUILD IMAGES FROM WORKSPACE ────────────────────────
+    - name: Build Application Backend Image
+      community.docker.docker_image:
+        name: student-task-backend
+        tag: latest
+        build:
+          path: "{{ playbook_dir }}"
+          dockerfile: backend/backend.Dockerfile
+        source: build
+        force_source: true
+
+    - name: Build Application Frontend Image
+      community.docker.docker_image:
+        name: student-task-frontend
+        tag: latest
+        build:
+          path: "{{ playbook_dir }}"
+          dockerfile: frontend/frontend.Dockerfile
+        source: build
+        force_source: true
+
+    - name: Build Logstash Image
+      community.docker.docker_image:
+        name: student-task-logstash
+        tag: latest
+        build:
+          path: "{{ playbook_dir }}/logstash/config"
+        source: build
+        force_source: true
+
+    - name: Build Prometheus Image
+      community.docker.docker_image:
+        name: student-task-prometheus
+        tag: latest
+        build:
+          path: "{{ playbook_dir }}/prometheus"
+        source: build
+        force_source: true
+
+    # ── 3. RUN SERVICES (Equivalent to docker-compose.yml) ──
+    - name: Start Elasticsearch
+      community.docker.docker_container:
+        name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        ports:
+          - "9200:9200"
+        env:
+          discovery.type: "single-node"
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        volumes:
+          - es-data:/usr/share/elasticsearch/data
+
+    - name: Start Backend
+      community.docker.docker_container:
+        name: student-task-backend
+        image: student-task-backend:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        env:
+          NODE_ENV: "production"
+          PORT: "3001"
+        volumes:
+          - student-task-sqlite:/app/database
+
+    - name: Start Frontend
+      community.docker.docker_container:
+        name: student-task-frontend
+        image: student-task-frontend:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        ports:
+          - "3005:80"
+
+    - name: Start Logstash
+      community.docker.docker_container:
+        name: logstash
+        image: student-task-logstash:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        ports:
+          - "5044:5044"
+          - "50001:50000"
+        volumes:
+          - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+    - name: Start Kibana
+      community.docker.docker_container:
+        name: kibana
+        image: docker.elastic.co/kibana/kibana:8.11.1
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        ports:
+          - "5601:5601"
+        env:
+          ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+
+    - name: Start Prometheus
+      community.docker.docker_container:
+        name: prometheus
+        image: student-task-prometheus:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        ports:
+          - "9090:9090"
+        volumes:
+          - prometheus-data:/prometheus
+
+    - name: Start Grafana
+      community.docker.docker_container:
+        name: grafana
+        image: grafana/grafana:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: semaphore_default
+        ports:
+          - "3000:3000"
+        env:
+          GF_SECURITY_ADMIN_PASSWORD: "admin"
+        volumes:
+          - grafana-data:/var/lib/grafana
