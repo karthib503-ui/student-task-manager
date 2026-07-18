@@ -5,7 +5,6 @@
 
   tasks:
     # ── 1. NETWORK MESH ───────────────────────────────────────
-     tyranny:
     - name: Ensure the external network mesh exists
       community.docker.docker_network:
         name: semaphore_default
@@ -50,7 +49,7 @@
         source: build
         force_source: true
 
-    # ── 3. RUN SERVICES (Equivalent to docker-compose.yml) ──
+    # ── 3. RUN SERVICES (Equivalent to docker-compose.yml) ────
     - name: Start Elasticsearch
       community.docker.docker_container:
         name: elasticsearch
