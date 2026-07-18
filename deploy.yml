@@ -8,11 +8,8 @@
       ansible.builtin.shell:
         cmd: docker network create semaphore_default 2>/dev/null || true
 
-    - name: Run Docker Compose Stack Lifecycle
-      ansible.builtin.shell:
-        cmd: |
-          docker compose down --remove-orphans
-          docker compose build --no-cache
-          docker compose up -d
-      environment:
-        COMPOSE_FILE: "{{ playbook_dir }}/docker-compose.yml"
+    - name: Run Docker Compose Stack Lifecycle via Native Module
+      community.docker.docker_compose_v2:
+        project_src: "{{ playbook_dir }}"
+        state: present
+        build: always
