@@ -27,7 +27,7 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
           <div className="flex items-center gap-2">
             <span className="text-2xl">📚</span>
             <span className="text-slate-900 font-bold text-lg">
-              Karthick123 Student Task Manager
+              KarthickB Student Task Manager
             </span>
           </div>
 
