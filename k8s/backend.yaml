@@ -20,6 +20,10 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 3001
+        # ADD THIS SECTION BELOW TO LOAD YOUR CONFIGMAP VARIABLES:
+        envFrom:
+        - configMapRef:
+            name: app-config
 ---
 apiVersion: v1
 kind: Service
